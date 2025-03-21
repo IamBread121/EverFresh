@@ -1,0 +1,39 @@
+# Flutter/Dart
+.dart_tool/
+.build/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.env
+
+# Android
+android/.gradle/
+android/app/debug.keystore
+
+# Gradle
+gradle-wrapper.jar
+/.gradle
+/gradlew
+/gradlew.bat
+/local.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/Flutter.podspec
+
+# Debug & Logs
+captures/
+GeneratedPluginRegistrant.java
+
+# Firebase & API Keys
+google-services.json
+**/*.keys.json
+**/*.keystore
+**/*.jks
+
+# Keystore & Secrets (important: NEVER commit these)
+key.properties
