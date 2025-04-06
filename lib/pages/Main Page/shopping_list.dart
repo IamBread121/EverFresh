@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShoppingList extends StatefulWidget {
   const ShoppingList({super.key});
@@ -8,20 +10,6 @@ class ShoppingList extends StatefulWidget {
 }
 
 class _ShoppingListState extends State<ShoppingList> {
-  final List<Map<String, dynamic>> shoppingList = [
-    {'name': 'Apple', 'qty': 4},
-    {'name': 'Pear', 'qty': 5},
-    {'name': 'Kiwi', 'qty': 3}
-  ];
-
-  void _deleteItem(int index) {
-    setState(() {
-      shoppingList.removeAt(index);
-    });
-  }
-
-  int itemCount = 1;
-
   void _showAddItemDialog() {
     String itemName = '';
     String itemQty = '';
@@ -68,16 +56,19 @@ class _ShoppingListState extends State<ShoppingList> {
             ),
             // Add Button
             TextButton(
-              onPressed: () {
-                // Validate and add item
+              onPressed: () async {
+                final navigator = Navigator.of(context);
                 if (itemName.isNotEmpty && itemQty.isNotEmpty) {
-                  setState(() {
-                    shoppingList.add({
-                      'name': itemName,
-                      'qty': int.tryParse(itemQty) ?? 1,
-                    });
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('shopping_list')
+                      .add({
+                    'name': itemName,
+                    'qty': int.tryParse(itemQty) ?? 1,
                   });
-                  Navigator.of(context).pop();
+
+                  navigator.pop();
                 }
               },
               child: const Text('Add'),
@@ -109,55 +100,80 @@ class _ShoppingListState extends State<ShoppingList> {
                 ),
               ),
 //==========================================================================================================================
-// List Buider
+// List Builder from Firebase
               Expanded(
-                child: ListView.builder(
-                    itemCount: shoppingList.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 5),
-                        child: Container(
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDAE9DC),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 20, right: 30),
-                                child: Text(
-                                  shoppingList[index]['name'],
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('shopping_list')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final shoppingItems = snapshot.data!.docs;
+
+                    return ListView.builder(
+                      itemCount: shoppingItems.length,
+                      itemBuilder: (context, index) {
+                        final item = shoppingItems[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 5),
+                          child: Container(
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDAE9DC),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 20, right: 30),
+                                  child: Text(
+                                    item['name'],
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Text(
+                                  item['qty'].toString(),
                                   style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold),
                                 ),
-                              ),
-                              Text(
-                                shoppingList[index]['qty'].toString(),
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: IconButton(
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: IconButton(
                                       icon: const Icon(
                                         Icons.delete,
                                         size: 20,
                                       ),
-                                      onPressed: () {
-                                        _deleteItem(index);
-                                      }),
-                                ),
-                              )
-                            ],
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(FirebaseAuth
+                                                .instance.currentUser!.uid)
+                                            .collection('shopping_list')
+                                            .doc(item.id)
+                                            .delete();
+                                      },
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }),
+                        );
+                      },
+                    );
+                  },
+                ),
               )
             ],
           ),

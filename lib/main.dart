@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:food_prediction/pages/home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:food_prediction/pages/Intro/intro_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() async {

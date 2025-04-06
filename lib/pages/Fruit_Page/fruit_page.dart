@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:food_prediction/pages/home_page.dart';
 import 'package:food_prediction/pages/Fruit_Page/scan_fruit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class FruitPage extends StatefulWidget {
   const FruitPage({super.key});
@@ -10,14 +13,36 @@ class FruitPage extends StatefulWidget {
 }
 
 class _FruitPageState extends State<FruitPage> {
-  final List<Map<String, dynamic>> _fruitList = [
-    {'name': 'Banana', 'qty': 5},
-    {'name': 'Strawberry', 'qty': 6},
-    {'name': 'Apple', 'qty': 1},
-    {'name': 'Kiwi', 'qty': 2},
-    {'name': 'Pear', 'qty': 8},
-    {'name': 'Pineapple', 'qty': 2},
-  ];
+  List<Map<String, dynamic>> _fruitList = [];
+  
+    @override
+  void initState() {
+    super.initState();
+    fetchFruitData();
+  }
+
+  Future<void> fetchFruitData() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('fruits')
+        .get();
+
+    final List<Map<String, dynamic>> loadedFruits = snapshot.docs.map((doc) {
+      return {
+        'name': doc['fruitName'],
+        'qty': doc['quantity'],
+      };
+    }).toList();
+
+    setState(() {
+      _fruitList = loadedFruits;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {

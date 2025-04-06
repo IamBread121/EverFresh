@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -7,12 +10,6 @@ class HistoryPage extends StatefulWidget {
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
-final List<Map<String, dynamic>> _historyList = [
-  {'name': 'Watermelon', 'qty': 1, 'status': false},
-  {'name': 'Strawberry', 'qty': 5, 'status': true},
-  {'name': 'Grape', 'qty': 5, 'status': false},
-  {'name': 'Papaya', 'qty': 2, 'status': true},
-];
 
 String returnStatus(bool status) {
   String x = "You didn't finish the ";
@@ -41,7 +38,30 @@ Color returnColorText(bool status) {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+List<Map<String, dynamic>> _historyList = [];
   @override
+  void initState() {
+  super.initState();
+  fetchHistory();
+}
+void fetchHistory() async {
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+
+  final snapshot = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(userId)
+    .collection('history')
+    .orderBy('timestamp', descending: true)
+    .get();
+
+  setState(() {
+    _historyList = snapshot.docs.map((doc) => {
+      'name': doc['name'],
+      'qty': doc['qty'],
+      'status': doc['status'],
+    }).toList();
+  });
+}
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: const Color(0xFFFFFFFF),
