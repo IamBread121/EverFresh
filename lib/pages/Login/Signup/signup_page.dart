@@ -41,6 +41,7 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Sign Up Successful!")),
       );

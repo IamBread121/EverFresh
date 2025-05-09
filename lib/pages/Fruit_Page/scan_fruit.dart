@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:food_prediction/pages/Fruit_Page/add_fruit_next.dart';
 import 'package:food_prediction/pages/Fruit_Page/fruit_page.dart';
+import 'package:camera/camera.dart';
+
 
 // ignore: camel_case_types
 class scanFruit extends StatefulWidget {
@@ -12,6 +14,39 @@ class scanFruit extends StatefulWidget {
 
 // ignore: camel_case_types
 class _scanFruitState extends State<scanFruit> {
+
+  CameraController? _controller;
+  late Future<void> _initializeControllerFuture = Future.value();
+
+  @override
+  void initState() {
+    super.initState();
+    _initCamera();
+  }
+
+  Future<void> _initCamera() async {
+    final cameras = await availableCameras();
+    final frontCamera = cameras.firstWhere((camera) =>
+      camera.lensDirection == CameraLensDirection.back);
+    
+    _controller = CameraController(
+      frontCamera,
+      ResolutionPreset.medium,
+    );
+
+    _initializeControllerFuture = _controller!.initialize();
+
+    if(mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose(){
+    _controller?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +106,27 @@ class _scanFruitState extends State<scanFruit> {
                         )
                       ]
                     ),
-                    child: Image.asset('lib/image/scan.png', height: 300))
+                    child: FutureBuilder(
+                      future: _initializeControllerFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done && _controller != null) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              height: 300,
+                              width: 300,
+                              child: CameraPreview(_controller!),
+                            ),
+                          );
+                        } else {
+                          return const SizedBox(
+                            height: 300,
+                            child: Center(child: CircularProgressIndicator(),),
+                          );
+                        }
+                      }
+                    )
+                  )
                 ),
               ),
           //==========================================================================================================================

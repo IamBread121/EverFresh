@@ -66,135 +66,146 @@ class _HomePageFillState extends State<HomePageFill> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _logout,
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.logout),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.only(left: 50, right: 50),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 50),
-              const Text(
-                "Fruits",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 50),
-              const Text(
-                "Some fruits expiring soon",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Text(
-                  "Don't let them go to waste!",
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFFFFFF),
+    body: Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 50, right: 50),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 50),
+                const Text(
+                  "Fruits",
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 50),
+                const Text(
+                  "Some fruits expiring soon",
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
-              ),
-              //==================== Fruit List ====================
-              Flexible(
-                flex: 3,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    "Don't let them go to waste!",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _fruits.isEmpty
-                            ? const Center(child: Text("No fruits available"))
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: _fruits.length,
-                                itemBuilder: (context, index) {
-                                  final fruit = _fruits[index];
-                                  return HomepTile(
-                                    fruitname: fruit['fruitName'],
-                                    quantity: fruit['quantity'],
-                                    date: calculateRemainingDays(fruit['expiryDate']),
-                                    fruitId: fruit['id'],
-                                    onRemoved: () {
-                                      setState(() {
-                                        _fruits.removeAt(index);
-                                      });
-                                    },
-                                  );
-                                },
+                ),
+                //==================== Fruit List ====================
+                Flexible(
+                  flex: 3,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _fruits.isEmpty
+                              ? const Center(child: Text("No fruits available"))
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _fruits.length,
+                                  itemBuilder: (context, index) {
+                                    final fruit = _fruits[index];
+                                    return HomepTile(
+                                      fruitname: fruit['fruitName'],
+                                      quantity: fruit['quantity'],
+                                      date: calculateRemainingDays(fruit['expiryDate']),
+                                      fruitId: fruit['id'],
+                                      onRemoved: () {
+                                        setState(() {
+                                          if (index >= 0 && index < _fruits.length) {
+                                          _fruits.removeAt(index);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  },
+                                ),
+                    ),
+                  ),
+                ),
+                //==================== Buttons ====================
+                Flexible(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FruitPage()),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0dc6b5), Color(0xFF28d892)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: Text(
+                                "Your Fruit List",
+                                style: TextStyle(color: Colors.white),
                               ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 25),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ExpiringFruit()),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0dc6b5), Color(0xFF28d892)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: Text(
+                                "Expiring Fruit List",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              //==================== Buttons ====================
-              Flexible(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const FruitPage()),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0dc6b5), Color(0xFF28d892)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Center(
-                            child: Text(
-                              "Your Fruit List",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-                    GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ExpiringFruit()),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0dc6b5), Color(0xFF28d892)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Center(
-                            child: Text(
-                              "Expiring Fruit List",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+        // ============= Top Right FAB ===================
+        Positioned(
+          top: 40,
+          right: 20,
+          child: FloatingActionButton(
+            onPressed: _logout,
+            backgroundColor: Colors.red,
+            child: const Icon(Icons.logout),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

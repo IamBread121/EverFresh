@@ -3,6 +3,8 @@ import 'package:food_prediction/pages/Login/Signup/auth_service.dart';
 import 'package:food_prediction/pages/Login/Signup/forgetpassword_page.dart';
 import 'package:food_prediction/pages/Login/Signup/signup_page.dart';
 import 'package:food_prediction/pages/home_page.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class LoginPage1 extends StatefulWidget {
@@ -30,13 +32,19 @@ class _LoginPage1State extends State<LoginPage1> {
 
     var user = await _authService.signInWithEmail(email, password);
     if (user != null) {
+      if (!mounted) return;
+      final user = FirebaseAuth.instance.currentUser;
+      final idToken = await user?.getIdToken();
+      print("ID Token: $idToken");
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomePage()),
         );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Failed")),
+        const SnackBar(content: Text("Login Failed, Incorrect Email or Password")),
       );
     }
   }
@@ -46,6 +54,10 @@ class _LoginPage1State extends State<LoginPage1> {
       var user = await _authService.signInWithGoogle();
       if (user != null) {
         if (!mounted) return;
+        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+        final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+        final String? idToken = googleAuth.idToken;
+        print("Google ID Token: $idToken");
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),

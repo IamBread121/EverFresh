@@ -9,6 +9,7 @@ plugins {
 }
 
 android {
+    compileSdk 35
     namespace = "com.example.food_prediction"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

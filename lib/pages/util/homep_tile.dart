@@ -81,7 +81,7 @@ class _HomepTileState extends State<HomepTile> {
         widget.onRemoved!();
       }
     }
-
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("You ate one ${widget.fruitname}")),
     );
