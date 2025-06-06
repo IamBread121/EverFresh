@@ -4,6 +4,10 @@ import 'package:food_prediction/pages/Fruit_Page/scan_fruit.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../../main.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class AddFruitNext extends StatefulWidget {
   const AddFruitNext({super.key});
@@ -55,6 +59,40 @@ class _AddFruitNextState extends State<AddFruitNext> {
     'createdAt': FieldValue.serverTimestamp(),
   });
 }
+
+  Future<void> scheduleFruitNotification(String fruitName, DateTime expiryDate) async {
+  tz.initializeTimeZones();
+  final tz.TZDateTime notificationTime = tz.TZDateTime.from(
+    expiryDate.subtract(const Duration(days: 3)),
+    tz.local,
+  );
+
+  if (notificationTime.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    'fruit_channel_id',
+    'Fruit Notifications',
+    channelDescription: 'Notify before fruits expire',
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+
+  const NotificationDetails notificationDetails = NotificationDetails(
+    android: androidDetails,
+  );
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    fruitName.hashCode,
+    'Your $fruitName is expiring soon!',
+    'Eat or use it before it goes bad.',
+    notificationTime,
+    notificationDetails,
+    androidAllowWhileIdle: true,
+    uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    matchDateTimeComponents: DateTimeComponents.dateAndTime,
+  );
+}
+
 
 
   late DateTime today;
@@ -361,6 +399,10 @@ class _AddFruitNextState extends State<AddFruitNext> {
                         return;
                       }
                       saveFruitToFirebase(fruitName, quantity);
+                      if (isToggled1) {
+                        await scheduleFruitNotification(fruitName, expiry);
+                      }
+
                       Navigator.pushReplacement(
                         context, 
                         MaterialPageRoute(builder: (context) => FruitPage())

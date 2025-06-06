@@ -6,7 +6,20 @@ import 'package:food_prediction/pages/home_page.dart';
 import 'firebase_options.dart';
 import 'package:food_prediction/pages/Intro/intro_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = 
+  FlutterLocalNotificationsPlugin();
+
+Future<void> initializeNotifications() async {
+  const AndroidInitializationSettings androidSettings = 
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+  
+  const InitializationSettings initSettings = 
+    InitializationSettings(android: androidSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(initSettings);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +27,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await initializeNotifications();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

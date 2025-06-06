@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:food_prediction/pages/Fruit_Page/add_fruit_next.dart';
 import 'package:food_prediction/pages/Fruit_Page/fruit_page.dart';
 import 'package:camera/camera.dart';
+import 'package:tflite/tflite.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 
 // ignore: camel_case_types
@@ -22,7 +25,58 @@ class _scanFruitState extends State<scanFruit> {
   void initState() {
     super.initState();
     _initCamera();
+    _loadModel();
   }
+
+  Future<void> _loadModel() async {
+    await Tflite.loadModel(
+      model: "assets/fruit_classifier.tflite",
+      labels: "assets/class_labels.txt"
+    );
+  }
+
+  Future<void> _capturePredictAndNavigate() async {
+  if (_controller == null || _isProcessing) return;
+
+  setState(() { _isProcessing = true; });
+
+  try {
+    await _initializeControllerFuture;
+    final image = await _controller!.takePicture();
+
+    var recognitions = await Tflite.runModelOnImage(
+      path: image.path,
+      numResults: 1,
+      threshold: 0.5,
+      imageMean: 127.5,
+      imageStd: 127.5,
+    );
+    String predicted = "Unknown";
+    if (recognitions != null && recognitions.isNotEmpty) {
+      predicted = recognitions[0]['label'];
+    }
+
+    setState(() {
+      _predictedFruit = predicted;
+      _isProcessing = false;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddFruitNext(fruitName: _predictedFruit ?? "Unknown"),
+      ),
+    );
+  } catch (e) {
+    setState(() { _isProcessing = false; });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to process image: $e"))
+    );
+  }
+}
+
+  String? _predictedFruit;
+  bool _isProcessing = false;
 
   Future<void> _initCamera() async {
     final cameras = await availableCameras();
@@ -78,7 +132,7 @@ class _scanFruitState extends State<scanFruit> {
               ),
           //==========================================================================================================================
           // Scan Tips
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 70),
                 child: Align(
                   alignment: Alignment.center,
@@ -140,11 +194,11 @@ class _scanFruitState extends State<scanFruit> {
                         color: Colors.grey.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.only(top: 10, bottom: 10),
                         child: Center(
                           child: Text(
-                            "Apple",
+                            _predictedFruit ?? "No prediction yet",
                             style: TextStyle(
                               color: Colors.black,
                             ),
@@ -164,10 +218,7 @@ class _scanFruitState extends State<scanFruit> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const AddFruitNext())),
+                        onTap: _isProcessing ? null : _capturePredictAndNavigate,
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
@@ -177,17 +228,22 @@ class _scanFruitState extends State<scanFruit> {
                             ),
                             borderRadius: BorderRadius.circular(5),
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.only(top: 10, bottom: 10),
-                            child: Center(
-                              child: Text(
-                                "Next",
-                                style: TextStyle(
-                                  color: Colors.white,
+                          child: _isProcessing
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10),
+                                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                                )
+                              : const Padding(
+                                  padding: EdgeInsets.only(top: 10, bottom: 10),
+                                  child: Center(
+                                    child: Text(
+                                      "Next",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                     ],
